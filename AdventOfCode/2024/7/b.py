@@ -8,20 +8,29 @@ def load(input):
         lines = [line.strip() for line in lines]
         return [re.findall(r"\d+", line) for line in lines]
 
+def to_base3(num, length):
+    digits = []
+    for _ in range(length):
+        digits.append(str(num % 3))
+        num //= 3
+    return ''.join(reversed(digits))
+
 def valid_equation(equation):
-    result = equation[0]
+    result = int(equation[0])
     values = equation[1:]
     length = len(values)
-    calculated = {}
-    for i in range(0, 2 ** (length-1)):
-        sum = values[0]
-        binary_str = f"{i:0{length - 1}b}"
-        for j, char in enumerate(binary_str, 1):
+    for i in range(0, 3 ** (length-1)):
+        sum = int(values[0])
+        base3_str = to_base3(i, length - 1)
+        for j, char in enumerate(base3_str, 1):
             if char == '0':
-                sum += values[j]
+                sum += int(values[j])
+            elif char == '1':
+                sum *= int(values[j])
             else:
-                sum *= values[j]
-        if sum == result: return result
+                sum = int(str(sum) + values[j])
+        if sum == result:
+            return result
     return 0
 
 if __name__ == "__main__":
@@ -30,8 +39,7 @@ if __name__ == "__main__":
     equations = load("./input")
     sum = 0
 
-    for i , equation in enumerate(equations, 1):
-        equation = [int(num) for num in equation]
+    for equation in equations:
         result = valid_equation(equation)
         sum += result
 
