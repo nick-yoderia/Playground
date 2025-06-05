@@ -60,8 +60,8 @@ if __name__ == "__main__":
     visited = get_visited(guard_direction, guard_pos, maxx, maxy, obs_positions)
 
     loop_count = 0
-    for cord in visited:
+    for coord in visited:
         test_obs_positions = obs_positions.copy()
-        test_obs_positions.add(cord)
+        test_obs_positions.add(coord)
         if is_a_loop(guard_direction, guard_pos, maxx, maxy, test_obs_positions): loop_count += 1
     print(loop_count)
