@@ -17,37 +17,34 @@ def to_base3(num, length):
 
 def valid_equation(equation):
     result = int(equation[0])
-    length = len(equation[1:])
+    values = equation[1:]
+    length = len(values)
     operators = []
-    for i in range(0, 3 ** (length-1)):
-        operators.append(to_base3(i, length - 1))
-    while(len(operators) > 1):
-        operator = operators[len(operators) // 2]
-        midpoint = valid_equation_helper(equation, operator)
-        if midpoint < result:
-            operators = operators[:len(operators) // 2]
-        elif midpoint > result:
-            operators = operators[len(operators) // 2:]
-        else:
+    for i in range(0, 3 ** (length)):
+        operators.append(to_base3(i, length))
+
+    operator_parts = {}
+    for operator in operators:
+        sum = valid_equation_helper(values, operator, operator_parts)
+        if sum == result:
             return result
-    final_test = valid_equation_helper(equation, operators[0])
-    if final_test == result:
-        print(equation)
-        return result
     return 0
 
-def valid_equation_helper(equation, operator):
-    values = equation[1:]
-    sum = int(equation[1])
-    for i, char in enumerate(operator, 1):
-        if char == '0':
-            sum += int(values[i])
-        elif char == '1':
-            sum *= int(values[i])
+def valid_equation_helper(values, operator, operator_parts):
+    sum = int(values[0])
+    for i in range(1, len(operator)):
+        if operator[:i] in operator_parts:
+            sum = operator_parts[operator[:i]]
         else:
-            sum = int(str(sum) + values[i])
+            match operator[i-1]:
+                case '0':
+                    sum += int(values[i])
+                case '1':
+                    sum *= int(values[i])
+                case _:
+                    sum = int(str(sum) + values[i])
+            operator_parts[operator[:i]] = sum
     return sum
-
 
 if __name__ == "__main__":
     
