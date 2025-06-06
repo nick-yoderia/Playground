@@ -10,21 +10,18 @@ def load(input):
 def check_valid(i, current, values, length, result):
         # base conditional
         if i == length:
-            if current == result:
-                return True
-            else:
-                return False
+            return current == result
         
         val = values[i]
 
-        if current + val <= result and check_valid(i + 1, current + val, values, length, result):
-            return True
-        
         if current * val <= result and check_valid(i + 1, current * val, values, length, result):
             return True
         
         union = current * 10**(len(str(val))) + val
         if union <= result and check_valid(i + 1, union, values, length, result):
+            return True
+        
+        if current + val <= result and check_valid(i + 1, current + val, values, length, result):
             return True
         return False
 
