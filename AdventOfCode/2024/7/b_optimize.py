@@ -19,32 +19,20 @@ def valid_equation(equation):
     result = int(equation[0])
     values = equation[1:]
     length = len(values)
-    operators = []
-    for i in range(0, 3 ** (length)):
-        operators.append(to_base3(i, length))
-
-    operator_parts = {}
-    for operator in operators:
-        sum = valid_equation_helper(values, operator, operator_parts)
+    for i in range(0, 3 ** (length-1)):
+        sum = int(values[0])
+        base3_str = to_base3(i, length - 1)
+        for j, char in enumerate(base3_str, 1):
+            if char == '0':
+                sum += int(values[j])
+            elif char == '1':
+                sum *= int(values[j])
+            else:
+                sum = int(str(sum) + values[j])
+            if sum > result: break
         if sum == result:
             return result
     return 0
-
-def valid_equation_helper(values, operator, operator_parts):
-    sum = int(values[0])
-    for i in range(1, len(operator)):
-        if operator[:i] in operator_parts:
-            sum = operator_parts[operator[:i]]
-        else:
-            match operator[i-1]:
-                case '0':
-                    sum += int(values[i])
-                case '1':
-                    sum *= int(values[i])
-                case _:
-                    sum = int(str(sum) + values[i])
-            operator_parts[operator[:i]] = sum
-    return sum
 
 if __name__ == "__main__":
     
