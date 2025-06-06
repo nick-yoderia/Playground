@@ -45,4 +45,4 @@ if __name__ == "__main__":
 
     end_time = time.perf_counter()
     print(sum)
-    print("Runtime: {:f} seconds".format(end_time - start_time))
+    print(f"Runtime: {end_time - start_time:f} seconds")
