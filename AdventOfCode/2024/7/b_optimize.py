@@ -1,6 +1,5 @@
 import re
 import time
-from itertools import product
 
 # returns a list of numbers symbolizing an equation
 def load(input):
@@ -8,25 +7,34 @@ def load(input):
         lines = [line.strip() for line in file]
         return [list(map(int, re.findall(r"\d+", line))) for line in lines]
 
+def check_valid(i, current, values, length, result):
+        # base conditional
+        if i == length:
+            if current == result:
+                return True
+            else:
+                return False
+        
+        val = values[i]
+
+        if check_valid(i + 1, current + val, values, length, result):
+            return True
+        
+        if check_valid(i + 1, current * val, values, length, result):
+            return True
+        
+        union = current * 10**(len(str(val))) + val
+        if check_valid(i + 1, union, values, length, result):
+            return True
+        return False
+
 def valid_equation(equation):
     result = equation[0]
     values = equation[1:]
-    n = len(values)
+    length = len(values)
 
-    for ops in product((0, 1, 2), repeat=n-1):
-        sum = values[0]
-        for i, op in enumerate(ops, 1):
-            val = values[i]
-            if op == 0:
-                sum += val
-            elif op == 1:
-                sum *= val
-            else:
-                sum = sum * 10**(len(str(val))) + val
-            if sum > result:
-                break
-        if sum == result:
-            return result
+    if check_valid(1, values[0], values, length, result):
+        return result
     return 0
 
 if __name__ == "__main__":
