@@ -1,41 +1,35 @@
 import re
 import time
+from itertools import product
 
-# returns a list of numbers symbolizing a 
+# returns a list of numbers symbolizing an equation
 def load(input):
     with open(input, "r") as file:
-        lines = file.readlines()
-        lines = [line.strip() for line in lines]
-        return [re.findall(r"\d+", line) for line in lines]
-
-def to_base3(num, length):
-    digits = []
-    for _ in range(length):
-        digits.append(str(num % 3))
-        num //= 3
-    return ''.join(reversed(digits))
+        lines = [line.strip() for line in file]
+        return [list(map(int, re.findall(r"\d+", line))) for line in lines]
 
 def valid_equation(equation):
-    result = int(equation[0])
+    result = equation[0]
     values = equation[1:]
-    length = len(values)
-    for i in range(0, 3 ** (length-1)):
-        sum = int(values[0])
-        base3_str = to_base3(i, length - 1)
-        for j, char in enumerate(base3_str, 1):
-            if char == '0':
-                sum += int(values[j])
-            elif char == '1':
-                sum *= int(values[j])
+    n = len(values)
+
+    for ops in product((0, 1, 2), repeat=n-1):
+        sum = values[0]
+        for i, op in enumerate(ops, 1):
+            val = values[i]
+            if op == 0:
+                sum += val
+            elif op == 1:
+                sum *= val
             else:
-                sum = int(str(sum) + values[j])
-            if sum > result: break
+                sum = sum * 10**(len(str(val))) + val
+            if sum > result:
+                break
         if sum == result:
             return result
     return 0
 
 if __name__ == "__main__":
-    
     start_time = time.perf_counter()
     equations = load("./input")
     sum = 0
