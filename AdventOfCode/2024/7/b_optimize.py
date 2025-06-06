@@ -17,14 +17,14 @@ def check_valid(i, current, values, length, result):
         
         val = values[i]
 
-        if check_valid(i + 1, current + val, values, length, result):
+        if current + val <= result and check_valid(i + 1, current + val, values, length, result):
             return True
         
-        if check_valid(i + 1, current * val, values, length, result):
+        if current * val <= result and check_valid(i + 1, current * val, values, length, result):
             return True
         
         union = current * 10**(len(str(val))) + val
-        if check_valid(i + 1, union, values, length, result):
+        if union <= result and check_valid(i + 1, union, values, length, result):
             return True
         return False
 
