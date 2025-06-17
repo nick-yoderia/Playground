@@ -8,16 +8,20 @@ def load_data(input):
 
 def find_boxes(data):
     visited = set()
-    sides_count = 0
+    price = 0
     for y, line in enumerate(data):
         for x, char in enumerate(line):
             if (y, x) not in visited:
                 planters = set()
                 fences = set()
+                this_price = 0
                 make_box(data, y, x, char, planters, fences)
-                sides_count += find_sides(fences, planters) * len(planters)
+                sides = find_sides(planters, fences)
+                this_price += sides * len(planters)
+                #print(f"Region {char} has price {len(planters)} * {sides} = {this_price}")
+                price += this_price
                 visited.update(planters)
-    return sides_count
+    return price
 
 def make_box(data, y, x, char, planters: set, fences: set):
     if y < 0 or y >= len(data) or x < 0 or x >= len(data[y]) or data[y][x] != char:
@@ -30,30 +34,40 @@ def make_box(data, y, x, char, planters: set, fences: set):
     make_box(data, y+1, x, char, planters, fences)
     make_box(data, y, x-1, char, planters, fences)
     make_box(data, y, x+1, char, planters, fences)
-            
-def find_sides(fences: set, planters: set):
-    sides = 0
-    visited = set()
-    for y, x in fences:
-        if (y+1, x) in fences or (y-1, x) in fences:
-            sides += find_sides_helper(y, x, 1, 0, fences, visited)
-        elif (y, x+1) in fences or (y, x-1) in fences:
-            sides += find_sides_helper(y, x, 0, 1, fences, visited)
-        else:
-            for dx, dy in [(1,0), (-1,0), (0,1), (0,-1)]:
-                if (y+dy, x+dx) in planters:
-                    sides += 1
-        print(visited)
-    print(sides)
-    return sides
 
-def find_sides_helper(y, x, dy, dx, fences: list, visited: set):
-    if (y, x) in fences and (y, x, dy, dx) not in visited:
-        visited.add((y, x, dy, dx))
-        find_sides_helper(y+dy, x+dx, dy, dx, fences, visited)
-        find_sides_helper(y-dy, x-dx, dy, dx, fences, visited)
-        return 1
-    return 0
+def find_sides(planters: set, fences: set):
+    sum = 0
+    while fences:
+        y, x = list(fences)[0]
+        visited = set()
+        if (y+1, x) in planters:
+            sum += walk_sides(y, x, 0, 1, planters, visited)
+        elif (y-1, x) in planters:
+            sum += walk_sides(y, x, 0, -1, planters, visited)
+        elif (y, x+1) in planters:
+            sum += walk_sides(y, x, -1, 0, planters, visited)
+        elif (y, x-1) in planters:
+            sum += walk_sides(y, x, 1, 0, planters, visited)
+        visited = set((y, x) for y, x, _, _ in visited)
+        fences = fences - visited
+    return sum
+
+def walk_sides(y, x, dy, dx, planters, visited: set):
+    # base case: if we've already visited this edge with this direction, stop
+    if (y, x, dy, dx) in visited:
+        return 0
+    visited.add((y, x, dy, dx))
+    # if the cell to the right is not a planter, turn right and move forward 1
+    if (y+dx, x-dy) not in planters:
+        # turn right: (dy, dx) -> (dx, -dy)
+        return 1 + walk_sides(y+dx, x-dy, dx, -dy, planters, visited)
+    # if the next cell in the current direction is a planter, turn left
+    elif (y+dy, x+dx) in planters:
+        # turn left: (dy, dx) -> (-dx, dy)
+        return 1 + walk_sides(y, x, -dx, dy, planters, visited)
+    else:
+        # move forward
+        return walk_sides(y+dy, x+dx, dy, dx, planters, visited)
 
 if __name__ == '__main__':
     start_time = time.perf_counter()
