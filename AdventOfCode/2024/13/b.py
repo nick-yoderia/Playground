@@ -1,6 +1,7 @@
 import re
 import math
 from functools import lru_cache
+from collections import deque
 
 def load_data(input):
     with open(input, "r") as file:
@@ -10,10 +11,10 @@ def load_data(input):
         for i in range(0, len(lines), 3):
             a_nums = list(map(int, re.findall(r'-?\d+', lines[i])))
             b_nums = list(map(int, re.findall(r'-?\d+', lines[i+1])))
-            dest_nums = list(map(int, re.findall(r'-?\d+', lines[i+2])))
+            dest_nums = re.findall(r'-?\d+', lines[i+2])
             a_dx, a_dy = a_nums[0], a_nums[1]
             b_dx, b_dy = b_nums[0], b_nums[1]
-            x, y = dest_nums[0], dest_nums[1]
+            x, y = int(str(10000000000000) + dest_nums[0]), int(str(10000000000000) + dest_nums[1])
             machines.append([(a_dx, a_dy), (b_dx, b_dy), (x, y)])
     return machines
 
@@ -24,7 +25,6 @@ def find_cheapest_path(machine):
     dest = tuple(machine[2])
     return cheapest_helper(0, 0, a, b, dest)
 
-@lru_cache(maxsize=None)
 def cheapest_helper(x, y, a, b, dest):
     if x > dest[0] or y > dest[1]:
         return float('inf')
