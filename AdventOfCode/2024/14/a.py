@@ -18,13 +18,8 @@ def simulate_robot(robot: list, seconds, visualize=False):
     x, y = robot[0], robot[1]
     dx, dy = robot[2], robot[3]
     while(seconds > 0):
-        new_x, new_y = x+dx, y+dy
-
-        if new_x < 0: new_x = MAXX + new_x
-        if new_x >= MAXX: new_x = new_x - MAXX
-        if new_y < 0: new_y = MAXY + new_y
-        if new_y >= MAXY: new_y = new_y - MAXY
-        x, y = new_x, new_y
+        x = (x + dx) % MAXX
+        y = (y + dy) % MAXY
         seconds -= 1
         if visualize: draw_robot_path((x,y))
     return (x, y)
