@@ -65,8 +65,8 @@ if __name__ == '__main__':
     robots = load_data('input')
     end_positions = {}
     # Change dist and cur_time accordingly
-    dist = 1 # This is how many seconds you want to iterate by
-    cur_time = 0 # This is just your starting time
+    dist = 101*103 # This is how many seconds you want to iterate by
+    cur_time = 7687 # This is just your starting time
     robots = simulate_robots(robots, cur_time)
     while True:
         robots_dict = {}
@@ -85,4 +85,3 @@ if __name__ == '__main__':
                 cur_time -= dist
         elif key.lower() == b'q':
             break
-        

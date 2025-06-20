@@ -5,7 +5,6 @@ with open(input, "r") as file:
     text = file.read()
 
 pattern = r"don't\(\)|do\(\)|mul\(\d+,\d+\)"
-
 match = re.findall(pattern, text)
 
 pattern = r"\d+"
