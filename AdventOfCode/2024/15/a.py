@@ -69,10 +69,10 @@ def draw_map(walls: set, boxes: set, robot, move):
     print(f"\nNext move: {move}\n")
 
 if __name__ == '__main__':
-    DEBUG = True
+    DEBUG = False
     warehouse, moves, MAXY, MAXX = load_data('input')
-
     walls, boxes, robot = mapify(warehouse)
+    
     if DEBUG:
         for move in moves:
             draw_map(walls, boxes, robot, move)
