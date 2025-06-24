@@ -69,7 +69,7 @@ def draw_map(walls: set, boxes: set, robot, move):
     print(f"\nNext move: {move}\n")
 
 if __name__ == '__main__':
-    DEBUG = False
+    DEBUG = True
     warehouse, moves, MAXY, MAXX = load_data('input')
     walls, boxes, robot = mapify(warehouse)
     
@@ -77,10 +77,13 @@ if __name__ == '__main__':
         for move in moves:
             draw_map(walls, boxes, robot, move)
             key = msvcrt.getch()
+            if key == b'\xe0':  # Special key prefix
+                key = msvcrt.getch()  # Discard or handle second byte
             if key == b'q':
                 break
             else:
                 robot = move_robot(move, walls, boxes, robot)
+        draw_map(walls, boxes, robot, move)
     else:
         for move in moves:
             robot = move_robot(move, walls, boxes, robot)

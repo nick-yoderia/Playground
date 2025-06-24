@@ -1,34 +1,6 @@
 import msvcrt
 import os
-from collections import defaultdict
-
-class box:
-    def __init__(self, y, x):
-        self.y1, self.x1 = y,x
-        self.y2, self.x2 = y,x+1
-
-    def __eq__(self, coords: tuple):
-        return coords == (self.y1, self.x1) or coords == (self.y2, self.x2)
-    
-    def can_move(self, dy, dx, walls):
-        if (self.y1+dy, self.x1+dx) in walls or (self.y2+dy, self.x2+dx) in walls:
-            return False
-        return True
-
-    def move (self, dy, dx, walls):
-        if self.can_move(dy, dx, walls):
-            self.y1, self.x1 = self.y1 + dy, self.x1 + dx
-            self.y2, self.x2 = self.y2 + dy, self.x2 + dx
-
-    @property
-    def left(self):
-        return self.y1, self.x1
-    
-    @property
-    def right(self):
-        return self.y2, self.x2
-
-
+import time
 
 def load_data(input):
     with open(input, 'r') as file:
@@ -42,14 +14,14 @@ def load_data(input):
 
 def mapify(warehouse):
     walls = set()
-    boxes = []
+    boxes = set()
     for y in range(MAXY):
         for x in range(MAXX//2):
             if warehouse[y][x] == '#':
                 walls.add((y,2*x))
                 walls.add((y,2*x+1))
             elif warehouse[y][x] == 'O':
-                boxes.append(box(y,2*x))
+                boxes.add((y,2*x))
             elif warehouse[y][x] == '@':
                 robot = (y, 2*x)
     return walls, boxes, robot
@@ -57,30 +29,81 @@ def mapify(warehouse):
 def move_robot(move: str, walls: set, boxes: set, robot):
     moves = {'^': (-1, 0), '>': (0, 1), 'v': (1, 0), '<': (0, -1)}
     dy, dx = moves[move]
+    new_robot = robot
     new_y = robot[0] + dy
     new_x = robot[1] + dx
+    new_boxes = set()
     if 0 <= new_y < MAXY and 0 <= new_x < MAXX:
-        if (new_y, new_x) not in boxes and (new_y, new_x) not in walls:
-            robot = (new_y, new_x)
+        if (new_y, new_x) not in boxes and (new_y, new_x - 1) not in boxes and (new_y, new_x) not in walls:
+            new_robot = (new_y, new_x)
         elif (new_y, new_x) in boxes:
-            if move_box((new_y, new_x), dy, dx, walls, boxes):
-                robot = (new_y, new_x)
-    return robot
+            if dy == 0:
+                if move_box_horizontal(new_y, new_x, dy, dx, walls, boxes):
+                    new_robot = (new_y, new_x)
+            else:
+                if move_box_vertical(new_y, new_x, dy, dx, walls, boxes, new_boxes):
+                    boxes.update(new_boxes)
+                    new_robot = (new_y, new_x)
+                else:
+                    new_boxes = set((y-dy,x-dx) for y,x in new_boxes)
+                    boxes.update(new_boxes)
+        elif (new_y, new_x - 1) in boxes:
+            if dy == 0:
+                if move_box_horizontal(new_y, new_x - 1, dy, dx, walls, boxes):
+                    new_robot = (new_y, new_x)
+            else:
+                if move_box_vertical(new_y, new_x - 1, dy, dx, walls, boxes, new_boxes):
+                    boxes.update(new_boxes)
+                    new_robot = (new_y, new_x)
+                else:
+                    new_boxes = set((y-dy,x-dx) for y,x in new_boxes)
+                    boxes.update(new_boxes)
+    return new_robot
 
-def move_box(pos, dy, dx, walls, boxes):
-    y, x = pos
-    if not (0 <= y < MAXY and 0 <= x < MAXX):
+def move_box_vertical(y, x, dy, dx, walls, boxes: set, new_boxes: set):
+    move_flag = True
+    if (y, x) not in boxes:
         return False
-    elif (y, x) not in boxes and (y, x) not in walls:
-        return True
-    elif (y, x) in walls:
+    
+    cursor = (y, x)
+    new_box = (y + dy, x + dx)
+    ny, nx = new_box
+
+    if not (0 <= ny < MAXY and 0 <= nx < MAXX):
         return False
-    else:
-        for cursor in boxes:
-            if (y, x) == cursor:
-                if move_box(tuple(map(sum,zip(cursor.left, (dy,dx)))), dy, dx, walls, boxes) \
-                and move_box(tuple(map(sum,zip(cursor.right, (dy,dx)))), dy, dx, walls, boxes):
-                    cursor.move(dy,dx, walls)
+    elif (ny, nx) in walls or (ny, nx + 1) in walls:
+        return False
+    elif (ny, nx) in boxes:
+        move_flag = move_box_vertical(ny, nx, dy, dx, walls, boxes, new_boxes)
+    if (ny, nx - 1) in boxes:
+        move_flag = move_flag and move_box_vertical(ny, nx - 1, dy, dx, walls, boxes, new_boxes)
+    if (ny, nx + 1) in boxes:
+        move_flag = move_flag and move_box_vertical(ny, nx + 1, dy, dx, walls, boxes, new_boxes)
+
+    boxes.remove(cursor)
+    new_boxes.add(new_box)
+    return move_flag
+
+def move_box_horizontal(y, x, dy, dx, walls, boxes: set):
+    move_flag = True
+    if (y, x) not in boxes:
+        return False
+    
+    cursor = (y, x)
+    new_box = (y + dy, x + dx)
+    ny, nx = new_box
+
+    if not (0 <= ny < MAXY and 0 <= nx < MAXX):
+        return False
+    elif (ny, nx) in walls or (ny, nx + 1) in walls:
+        return False
+    elif (ny, nx+dx) in boxes:
+        move_flag = move_box_horizontal(ny, nx+dx, dy, dx, walls, boxes)
+
+    if move_flag:
+        boxes.remove(cursor)
+        boxes.add(new_box)
+    return move_flag
 
 def draw_map(walls: set, boxes: set, robot, move):
     rows = []
@@ -102,7 +125,8 @@ def draw_map(walls: set, boxes: set, robot, move):
         rows.append(''.join(row))
     os.system('cls' if os.name == 'nt' else 'clear')
     print('\n'.join(rows))
-    print(f"\nNext move: {move}\n")
+    print(f"\n{robot}")
+    print(f"Next move: {move}\n")
 
 if __name__ == '__main__':
     DEBUG = True
@@ -113,10 +137,13 @@ if __name__ == '__main__':
         for move in moves:
             draw_map(walls, boxes, robot, move)
             key = msvcrt.getch()
+            if key == b'\xe0':  # Special key prefix
+                key = msvcrt.getch()  # Discard or handle second byte
             if key == b'q':
                 break
             else:
                 robot = move_robot(move, walls, boxes, robot)
+        draw_map(walls, boxes, robot, move)
     else:
         for move in moves:
             robot = move_robot(move, walls, boxes, robot)
