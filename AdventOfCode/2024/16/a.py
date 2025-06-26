@@ -1,5 +1,6 @@
 import math
-from functools import lru_cache
+import heapq
+from collections import defaultdict
 
 def load_data(input):
     with open(input, 'r') as file:
@@ -31,35 +32,39 @@ def turn_left(direction):
     dy, dx = direction
     return -dx, dy
 
-def shortest_path(reindeer, direction, finish, tiles: set, visited: set):
-    if reindeer == finish:
-        return 0
-    y, x = reindeer
-    visited = visited | {(reindeer, direction)}
-    shortest = [math.inf]
 
-    dy, dx = direction
-    next_pos = (y + dy, x + dx)
-    if next_pos in tiles and (next_pos, (dy, dx)) not in visited:
-        shortest.append(1 + shortest_path(next_pos, direction, finish, tiles, visited))
+def shortest_path(reindeer, direction, finish, tiles:set):
+    visited = defaultdict(lambda: math.inf)
+    min_pq = []
+    heapq.heappush(min_pq, (0, (reindeer, direction)))
 
-    dy, dx = turn_right(direction)
-    next_pos = (y + dy, x + dx)
-    if next_pos in tiles and (next_pos, (dy, dx)) not in visited:
-        shortest.append(1001 + shortest_path(next_pos, (dy, dx), finish, tiles, visited))
+    while min_pq:
+        cost, (pos, direction) = heapq.heappop(min_pq)
+        visited[(pos, direction)] = cost
 
-    dy, dx = turn_left(direction)
-    next_pos = (y + dy, x + dx)
-    if next_pos in tiles and (next_pos, (dy, dx)) not in visited:
-        shortest.append(1001 + shortest_path(next_pos, (dy, dx), finish, tiles, visited))
+        if pos == finish:
+            return cost
 
-    path = min(shortest)
-    return path
+        straight = tuple(map(sum, zip(pos, direction)))
+        if straight in tiles and cost + 1 < visited[(straight, direction)]:
+            visited[(straight, direction)] = cost + 1
+            heapq.heappush(min_pq, (cost + 1, (straight, direction)))
+
+        right_turn = turn_right(direction)
+        if cost + 1000 < visited[(pos, right_turn)]:
+            visited[(pos, right_turn)] = cost + 1000
+            heapq.heappush(min_pq, (cost + 1000, (pos, right_turn)))
+
+        left_turn = turn_left(direction)
+        if cost + 1000 < visited[(pos, left_turn)]:
+            visited[(pos, left_turn)] = cost + 1000
+            heapq.heappush(min_pq, (cost + 1000, (pos, left_turn)))
+        
     
 
 if __name__ == '__main__':
     DEBUG = True
     maze, MAXY, MAXX = load_data('input')
     tiles, reindeer, finish = mapify(maze)
-    shortest = shortest_path(reindeer, (0,1), finish, tiles, set())
+    shortest = shortest_path(reindeer, (0,1), finish, tiles)
     print(shortest)
