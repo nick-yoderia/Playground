@@ -32,15 +32,15 @@ def turn_left(direction):
     dy, dx = direction
     return -dx, dy
 
-
 def shortest_path(reindeer, direction, finish, tiles:set):
     visited = defaultdict(lambda: math.inf)
     min_pq = []
     heapq.heappush(min_pq, (0, (reindeer, direction)))
 
     while min_pq:
-        cost, (pos, direction) = heapq.heappop(min_pq)
-        visited[(pos, direction)] = cost
+        cost, previous = heapq.heappop(min_pq)
+        pos, direction = previous
+        visited[previous] = cost
 
         if pos == finish:
             return cost
