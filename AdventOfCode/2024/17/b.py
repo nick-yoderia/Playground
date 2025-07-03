@@ -1,3 +1,6 @@
+import sys
+import time
+
 def load_data(input):
     with open(input, 'r') as file:
         lines = file.readlines()
@@ -42,10 +45,9 @@ def bdv(operand, a):
 def cdv(operand, a):
     return a // 1>>operand
 
-if __name__ == '__main__':
-    a, b, c, program = load_data('input')
+def run_program(a, b, c, program, optimize):
     output = []
-
+    a_start = a
     i = 0
     while i < len(program):
         instruction = program[i]
@@ -82,6 +84,9 @@ if __name__ == '__main__':
                     i += 2
                 case 5:
                     out(operand_value, output)
+                    index = len(output) - 1
+                    if optimize and (index > len(program) or output[index] != program[index]):
+                        return a_start + 1, True, True
                     i += 2
                 case 6:
                     b = bdv(operand_value, a)
@@ -91,6 +96,22 @@ if __name__ == '__main__':
                     i += 2
         else:
             i += 1
-    if output:
-        out_string = ','.join(map(str, output))
-        print(out_string)
+    if output == program:
+        return a_start, False, True
+    elif len(output) < len(program):
+        # print(f"{"".join(map(str, output))} != {"".join(map(str, program))}")
+        return a_start*10, True, False
+    else:
+        return a_start+1, True, True
+
+if __name__ == '__main__':
+    start_time = time.perf_counter()
+    a, b, c, program = load_data('input')
+    a = 1
+    flag = True
+    optimize = False
+    while flag:
+        a, flag, optimize = run_program(a,b,c, program, optimize)
+    print(a)
+    end_time = time.perf_counter()
+    print(f"{end_time - start_time:f} seconds")
