@@ -44,9 +44,10 @@ def bdv(operand, a):
 def cdv(operand, a):
     return a // 1>>operand
 
-def run_program(a, b, c, program):
+def run_program(a: str, b, c, program):
+    # a comes in as a string representing a base 8 number
+    a = int(a, 8)
     output = []
-    a_start = a
     i = 0
     while i < len(program):
         instruction = program[i]
@@ -92,29 +93,38 @@ def run_program(a, b, c, program):
                     i += 2
         else:
             i += 1
-    if output == program:
-        return a_start, False
-    elif len(output) < len(program):
-        return 8**(len(program) - len(output)), True
-    elif len(output) == len(program):
-        matching = num_matching(output, program)
-        diff = len(program) - matching
-        return a_start+8**(diff-1), True
+    return output
 
-def num_matching(arr1, arr2):
-    matching = 0
-    for i in range(min(len(arr1), len(arr2))):
-        if arr1[i] == arr2[i]:
-            matching += 1
-    return matching
+def recursive_test(a: str, b, c, program, solutions: list):
+    # a is a string representing an octal
+    output = run_program(a, b, c, program)
+    if output == program:
+        solutions.append(int(a, 8))
+        return
+    elif len(a) <= len(program) and output == program[-len(output):]:
+        for i in range(8):
+            recursive_test(a+str(i), b, c, program, solutions)
 
 if __name__ == '__main__':
+    _, b, c, program = load_data('input')
+    solutions = []
+    starting_octals = []
+
+    # start the clock
     start_time = time.perf_counter()
-    a, b, c, program = load_data('input')
-    a = 1
-    flag = True
-    while flag:
-        a, flag = run_program(a,b,c, program)
-    print(a)
+    # find most significant octal
+    for i in range(8):
+        output = run_program(str(i), b, c, program)
+        if output == program[-len(output):]:
+            starting_octals.append(str(i))
+
+    # dfs on all potential answers
+    for a in starting_octals:
+        recursive_test(a, b, c, program, solutions)
+
+    # end the clock
     end_time = time.perf_counter()
-    print(f"{end_time - start_time:f} seconds")
+
+    # print results
+    print(f"{end_time-start_time:f} seconds")
+    print(min(solutions))
