@@ -1,4 +1,3 @@
-import sys
 import time
 
 def load_data(input):
@@ -45,7 +44,7 @@ def bdv(operand, a):
 def cdv(operand, a):
     return a // 1>>operand
 
-def run_program(a, b, c, program, optimize):
+def run_program(a, b, c, program):
     output = []
     a_start = a
     i = 0
@@ -84,9 +83,6 @@ def run_program(a, b, c, program, optimize):
                     i += 2
                 case 5:
                     out(operand_value, output)
-                    index = len(output) - 1
-                    if optimize and (index > len(program) or output[index] != program[index]):
-                        return a_start + 1, True, True
                     i += 2
                 case 6:
                     b = bdv(operand_value, a)
@@ -97,21 +93,28 @@ def run_program(a, b, c, program, optimize):
         else:
             i += 1
     if output == program:
-        return a_start, False, True
+        return a_start, False
     elif len(output) < len(program):
-        # print(f"{"".join(map(str, output))} != {"".join(map(str, program))}")
-        return a_start*10, True, False
-    else:
-        return a_start+1, True, True
+        return 8**(len(program) - len(output)), True
+    elif len(output) == len(program):
+        matching = num_matching(output, program)
+        diff = len(program) - matching
+        return a_start+8**(diff-1), True
+
+def num_matching(arr1, arr2):
+    matching = 0
+    for i in range(min(len(arr1), len(arr2))):
+        if arr1[i] == arr2[i]:
+            matching += 1
+    return matching
 
 if __name__ == '__main__':
     start_time = time.perf_counter()
     a, b, c, program = load_data('input')
     a = 1
     flag = True
-    optimize = False
     while flag:
-        a, flag, optimize = run_program(a,b,c, program, optimize)
+        a, flag = run_program(a,b,c, program)
     print(a)
     end_time = time.perf_counter()
     print(f"{end_time - start_time:f} seconds")
