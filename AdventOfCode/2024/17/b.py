@@ -46,6 +46,7 @@ def cdv(operand, a):
 
 def run_program(a: str, b, c, program):
     # a comes in as a string representing a base 8 number
+    if not a: return []
     a = int(a, 8)
     output = []
     i = 0
@@ -101,26 +102,19 @@ def recursive_test(a: str, b, c, program, solutions: list):
     if output == program:
         solutions.append(int(a, 8))
         return
-    elif len(a) <= len(program) and output == program[-len(output):]:
+    elif len(a) <= len(program) and (output == program[-len(output):] or len(output) == 0):
         for i in range(8):
             recursive_test(a+str(i), b, c, program, solutions)
 
 if __name__ == '__main__':
     _, b, c, program = load_data('input')
     solutions = []
-    starting_octals = []
 
     # start the clock
     start_time = time.perf_counter()
-    # find most significant octal
-    for i in range(8):
-        output = run_program(str(i), b, c, program)
-        if output == program[-len(output):]:
-            starting_octals.append(str(i))
 
     # dfs on all potential answers
-    for a in starting_octals:
-        recursive_test(a, b, c, program, solutions)
+    recursive_test('', b, c, program, solutions)
 
     # end the clock
     end_time = time.perf_counter()
