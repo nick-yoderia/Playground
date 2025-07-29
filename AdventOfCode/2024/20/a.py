@@ -1,6 +1,7 @@
 from collections import defaultdict
 import heapq
 import math
+import time
 
 def load_data(input):
     with open(input, 'r') as file:
@@ -83,6 +84,7 @@ def cheat_saves(path, tiles, no_cheats, costs):
     return saves
 
 if __name__ == '__main__':
+    start_time = time.perf_counter()
     track, MAXY, MAXX = load_data('input')
     tiles, start, finish = mapify(track)
     no_cheats, path = shortest_path(tiles, start, finish)
@@ -96,3 +98,5 @@ if __name__ == '__main__':
         if key >= 100:
             total += saves[key]
     print(total)
+    end_time = time.perf_counter()
+    print(f"Elapsed time: {end_time - start_time:.2f} seconds")

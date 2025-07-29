@@ -1,6 +1,5 @@
 from collections import defaultdict
-import heapq
-import math
+import time
 
 def load_data(input):
     with open(input, 'r') as file:
@@ -12,7 +11,6 @@ def load_data(input):
 
 def mapify(maze):
     tiles = set()
-    walls = set()
     for y in range(MAXY):
         for x in range(MAXX):
             if maze[y][x] == '.':
@@ -23,68 +21,59 @@ def mapify(maze):
             elif maze[y][x] == 'E':
                 tiles.add((y,x))
                 finish = (y, x)
-            else:
-                walls.add((y,x))
-    return tiles, walls, start, finish
+    return tiles, start, finish
 
-def shortest_path(tiles, start, finish, max_depth=math.inf):
+def find_path(tiles, start):
     directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-    visited_cost = defaultdict(lambda: math.inf)
-    prev = {}
-    min_pq = []
-    min_cost = math.inf
-    heapq.heappush(min_pq, (0, start))
-    visited_cost[start] = 0
-
-    while min_pq:
-        cost, pos = heapq.heappop(min_pq)
-        if cost > max_depth:
-            continue
-        y, x = pos
-        if pos == finish:
-            min_cost = cost
-            break
+    path = {}
+    visited = set()
+    i = 1
+    y, x = start
+    while len(path) < len(tiles):
+        visited.add((y,x))
+        path[(y,x)] = len(tiles)-i
         for dy, dx in directions:
-            next_y, next_x = (y + dy, x + dx)
-            next_pos = (next_y, next_x)
-            if next_pos in tiles and cost + 1 < visited_cost[next_pos]:
-                visited_cost[next_pos] = cost + 1
-                prev[next_pos] = pos
-                heapq.heappush(min_pq, (cost + 1, next_pos))
+            new_y, new_x = y+dy, x+dx
+            if (new_y, new_x) in tiles and (new_y, new_x) not in visited:
+                y, x = new_y, new_x
+                i+=1
+                break
+    return path
 
-    # Reconstruct path
-    path = []
-    if min_cost != math.inf:
-        node = finish
-        while node != start:
-            path.append(node)
-            node = prev[node]
-        path.append(start)
-        path.reverse()
-    return min_cost, path
+def draw_circle(point, radius):
+    y0, x0 = point
+    points = set()
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            if abs(dy) + abs(dx) <= radius:
+                y, x = y0 + dy, x0 + dx
+                points.add(((y, x), abs(dy) + abs(dx)))
+    return points
+
+def find_time_saves(path, cheat_length):
+    saves = defaultdict(int)
+    for start_tile in path:
+        circle_points = draw_circle(start_tile, cheat_length)
+        for end_tile, cheat_cost in circle_points:
+            if end_tile in path:
+                if path[end_tile] < path[start_tile]:
+                    save = path[start_tile] - path[end_tile] - cheat_cost
+                    if save > 0:
+                        saves[save] += 1
+    return saves
 
 if __name__ == '__main__':
+    start_time = time.perf_counter()
     track, MAXY, MAXX = load_data('input')
-    tiles, walls, start, finish = mapify(track)
-    max_cost, main_path = shortest_path(tiles, start, finish)
-    saves = defaultdict(int)
-    for i, node in enumerate(main_path):
-        if i+100 >= len(main_path):
-            break
-        for j in range(i+100, len(main_path)):
-            sub_node = main_path[j]
-            non_cheat_cost = j - i
-            sub_walls = set(walls)
-            sub_walls.update([node, sub_node])
-            cheat_cost, cheat_path = shortest_path(sub_walls, node, sub_node, 2)
-            if len(cheat_path)-1 <= 2 and cheat_cost < non_cheat_cost:
-                saves[non_cheat_cost-cheat_cost] += 1
-    
-    # for key in saves:
-    #     print(f"There are {saves[key]} that save {key} picoseconds.")
+    tiles, start, finish = mapify(track)
+    path = find_path(tiles, start)
+    saves = find_time_saves(path, 20)
 
     total = 0
     for key in saves:
         if key >= 100:
             total += saves[key]
     print(total)
+
+    end_time = time.perf_counter()
+    print(f"Elapsed time: {end_time - start_time:.2f} seconds")
