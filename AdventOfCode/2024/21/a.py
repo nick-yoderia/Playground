@@ -1,5 +1,3 @@
-import itertools
-
 class Pad:
     def __init__(self, layout):
         self.layout = layout
@@ -10,43 +8,26 @@ class Pad:
         y2, x2 = end
         dy = y2 - y1
         dx = x2 - x1
-        move = ''
-        # Move vertically
-        if dy < 0:
-            move += '^' * abs(dy)
-        elif dy > 0:
-            move += 'v' * abs(dy)
-        # Move horizontally
+        # Choose move order with left first, then down, up, right
+        path = []
         if dx < 0:
-            move += '<' * abs(dx)
-        elif dx > 0:
-            move += '>' * abs(dx)
-
-        moves = [''.join(move) for move in itertools.permutations(move)]
-        return moves
+            path.append('<' * (-dx))
+        if dy > 0:
+            path.append('v' * dy)
+        if dy < 0:
+            path.append('^' * (-dy))
+        if dx > 0:
+            path.append('>' * dx)
+        return "".join(path) + "A"
     
     def path_to_code(self, codes: list):
         cur_pos = self.coords_dict['A']
-        paths = []
+        path = []
         for code in codes:
             for char in code:
-                moves = self.shortest_path(cur_pos, self.coords_dict[char])
-                if not paths:
-                    paths = moves
-                else:
-                    new_paths = []
-                    for path in paths:
-                        for perm in moves:
-                            new_path = path + perm
-                            new_paths.append(new_path)
-                    paths = new_paths
-                for path in paths:
-                    path += 'A'
-                    cur_pos = self.coords_dict[char]
-        # Find the minimum length among all paths
-        min_length = min(len(path) for path in paths)
-        # Return only those paths that have the minimum length
-        return [path for path in paths if len(path) == min_length]
+                path.append(self.shortest_path(cur_pos, self.coords_dict[char]))
+                cur_pos = self.coords_dict[char]
+        return ''.join(path)
 
     def get_coord_dict(self):
         coords_dict = {}
@@ -54,7 +35,8 @@ class Pad:
             for x in range(len(self.layout[0])):
                 coords_dict[self.layout[y][x]] = (y,x)
         return coords_dict
-    
+
+
 if __name__ == '__main__':
     code = '0123'
     numpad_array = [
@@ -71,7 +53,7 @@ if __name__ == '__main__':
     keypad = Pad(keypad_array)
 
     solutions = {}
-    
+
     with open('input', 'r') as file:
         lines = file.readlines()
         lines = [line.strip() for line in lines]
@@ -82,4 +64,5 @@ if __name__ == '__main__':
             solutions[line] = path
     
     for entry in solutions:
-        print(f"{entry}: {solutions[entry]}")
+        print(f"{entry}: {solutions[entry]} {len(solutions[entry])}")
+        # print(f"{entry}: {len(solutions[entry])}")
