@@ -31,6 +31,11 @@ class Pad:
                     coords_dict[self.layout[y][x]] = (y,x)
         return coords_dict
     
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+        if not hasattr(cls, 'path_to_code'):
+            raise TypeError(f"{cls.__name__} must define 'path_to_code'")
+
 class Keypad(Pad):
     def __init__(self):
         layout = [
@@ -49,7 +54,7 @@ class Keypad(Pad):
             for char in codes:
                 path += self.path_to_code(self.shortest_path(cur_pos, self.coords_dict[char]), depth - 1)
                 cur_pos = self.coords_dict[char]
-            return path
+        return path
 
 class Numpad(Pad):
     def __init__(self):
@@ -60,17 +65,14 @@ class Numpad(Pad):
             [None, '0', 'A']
         ]
         super().__init__(layout)
-    
-    def path_to_code(self, codes: str, depth=1):
+
+    def path_to_code(self, codes: str):
         cur_pos = self.coords_dict['A']
         path = ''
-        if depth < 1:
-            return codes
-        else:
-            for char in codes:
-                path += self.path_to_code(self.shortest_path(cur_pos, self.coords_dict[char]), depth - 1)
-                cur_pos = self.coords_dict[char]
-            return path
+        for char in codes:
+            path += self.shortest_path(cur_pos, self.coords_dict[char])
+            cur_pos = self.coords_dict[char]
+        return path
 
 if __name__ == '__main__':
     numpad = Numpad()
